@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id                  Int       @id @default(autoincrement())
+  createdAt           DateTime  @default(now())
+  clickId             String?
+  gclid               String?
+  fbclid              String?
+  channel             String?
+  query               String?
+  locale              String?
+  userAgent           String?
+  ip                  String?
+  geoCountry          String?
+  geoRegion           String?
+  geoCity             String?
+  referrerAdCreative  String?
+  params              String?
+}
+
+model Content {
+  id             Int      @id @default(autoincrement())
+  q              String
+  locale         String
+  html           String
+  metaTitle      String?
+  metaDescription String?
+  cacheKey       String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
