@@ -139,3 +139,20 @@ flowchart LR
 
   status[/status] --> metrics[(In-memory Metrics)]
 ```
+
+## Technology Choices & Rationale
+
+- **Next.js (App Router, v16):** Modern React framework with file-based routing, server components, and built-in API routes. Chosen for SSR/SEO, performance, and an integrated developer experience.
+- **TypeScript:** Adds type safety across server and client code, reducing runtime errors and documenting intent.
+- **Tailwind CSS:** Utility-first styling for fast iteration and consistent design without heavy CSS boilerplate.
+- **Prisma ORM:** Schema-first data modeling, migrations, and a clean TypeScript client. Simplifies DB access and is portable across SQLite/Postgres/MySQL.
+- **SQLite (dev):** Lightweight, zero-setup local database ideal for development and demos. Can be swapped to Postgres/MySQL in production by updating `provider` and `DATABASE_URL`.
+- **LRU Caches (content/ideas):** In-memory caches with TTL to reduce AI/API costs and improve latency. Env-tunable TTLs balance freshness vs. cost.
+- **Google AdSense RSOC:** Standard solution for Related Search monetization. Supports RSOC `ASID`, dev test mode (`data-adtest`), and an optional `data-page-url` override.
+- **Facebook Conversion API:** Server-side event delivery for reliable conversion tracking with retries and optional Test Event Code for validation.
+- **CMP (InMobi Choice):** Recommended free CMP; stubs integrate TCF/GPP/USP APIs and allow consent UI management for GDPR/CCPA compliance.
+- **In-memory Metrics:** Lightweight counters/timings surfaced on `/status` for quick operational insight without external telemetry.
+- **URL Helpers:** Centralized encode/decode/query building to prevent bugs in param handling across pages and links.
+- **Retry Utility:** Exponential backoff with jitter and timeouts to make external API calls resilient.
+- **Client Beacons:** `navigator.sendBeacon` or fetch with `keepalive` to log events without blocking user navigation.
+- **Mermaid Diagrams:** Markdown-friendly diagrams to communicate architecture clearly in docs without additional tooling.
