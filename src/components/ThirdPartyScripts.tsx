@@ -357,16 +357,26 @@ export function ThirdPartyScripts() {
                 </Script>
             ) : null}
 
-            {/* AdSense page-level config push for test mode */}
+            {/* AdSense script import (official snippet) */}
+            {adsenseClient ? (
+                <Script
+                    id="adsbygoogle-js"
+                    strategy="afterInteractive"
+                    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+                    crossOrigin="anonymous"
+                />
+            ) : null}
+
+            {/* Optional page-level config push (test mode) */}
             {adsenseClient && adsenseAdTest ? (
                 <Script id="adsbygoogle-config" strategy="afterInteractive">
                     {`
-                    (adsbygoogle = window.adsbygoogle || []).push({
-                        google_ad_client: '${adsenseClient}',
-                        enable_page_level_ads: true,
-                        google_adtest: 'on'
-                    });
-                `}
+                        (adsbygoogle = window.adsbygoogle || []).push({
+                            google_ad_client: '${adsenseClient}',
+                            enable_page_level_ads: true,
+                            google_adtest: 'on'
+                        });
+                    `}
                 </Script>
             ) : null}
         </>
