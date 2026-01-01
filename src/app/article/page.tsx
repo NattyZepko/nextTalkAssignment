@@ -6,6 +6,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 import { buildQuery } from '@/lib/url';
 import { prisma } from '@/lib/db';
+import { RSOCAd } from '@/components/RSOCAd';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,7 +88,15 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
             <h1 className="text-2xl font-semibold">{q}</h1>
             <p className="text-sm text-gray-300">Locale: {locale}</p>
             <div className="text-[12px] font-normal opacity-90"><span suppressHydrationWarning>{publishedText}</span></div>
+            {/* RSOC ad unit near top of article */}
+            <div className="my-4">
+                <RSOCAd query={q} locale={locale} />
+            </div>
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.html }} />
+            {/* Optional second unit after content */}
+            <div className="my-6">
+                <RSOCAd query={q} locale={locale} />
+            </div>
         </div>
     );
 }
