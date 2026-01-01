@@ -9,7 +9,7 @@ SERP-first Next.js app with RSOC ads, tracking, Facebook CAPI proxy, AI-generate
 3. Run database migrations.
 
 ```powershell
-Push-Location "d:\מסמכים\VS Code\nextTalkAssignment"
+Push-Location "d:\path\nextTalkAssignment"
 npm install
 npx prisma generate
 npx prisma migrate dev --name init
@@ -19,7 +19,7 @@ Pop-Location
 ## Development
 
 ```powershell
-Push-Location "d:\מסמכים\VS Code\nextTalkAssignment"
+Push-Location "d:\path\nextTalkAssignment"
 npm run dev
 Pop-Location
 ```
@@ -29,7 +29,7 @@ Open http://localhost:3000
 ## Production
 
 ```powershell
-Push-Location "d:\מסמכים\VS Code\nextTalkAssignment"
+Push-Location "d:\path\nextTalkAssignment"
 npm run build
 npx next start -p 3000
 Pop-Location
