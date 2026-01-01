@@ -69,7 +69,8 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
         const row = await prisma.content.findUnique({ where: { cacheKey: key }, select: { createdAt: true } });
         if (row?.createdAt) {
             const dt = new Date(row.createdAt);
-            const formatted = dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            // Format deterministically (UTC) to avoid client/server timezone mismatches during hydration
+            const formatted = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(dt);
             publishedText = `Published on ${formatted}`;
         }
     } catch { }
@@ -85,7 +86,7 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
             </div>
             <h1 className="text-2xl font-semibold">{q}</h1>
             <p className="text-sm text-gray-300">Locale: {locale}</p>
-            <div className="text-[12px] font-normal opacity-90">{publishedText}</div>
+            <div className="text-[12px] font-normal opacity-90"><span suppressHydrationWarning>{publishedText}</span></div>
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.html }} />
         </div>
     );

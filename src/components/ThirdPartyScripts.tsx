@@ -7,6 +7,7 @@ export function ThirdPartyScripts() {
     const cmpDomain = process.env.NEXT_PUBLIC_CMP_HOST_OVERRIDE;
     const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
     const adsenseAdTest = process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true';
+    const cmpDebug = (process.env.NEXT_PUBLIC_CMP_DEBUG === 'true') || (process.env.NEXT_PUBLIC_DEBUG_WIDGET === 'true');
 
     return (
         <>
@@ -35,6 +36,7 @@ export function ThirdPartyScripts() {
                     {`
 // InMobi Choice. Consent Manager Tag v3.0 (for TCF 2.2)
 (function() {
+    var CMP_DEBUG = ${cmpDebug ? 'true' : 'false'};
     var host = '${cmpDomain ?? ''}' || window.location.hostname;
     var element = document.createElement('script');
     var firstScript = document.getElementsByTagName('script')[0];
@@ -341,7 +343,9 @@ export function ThirdPartyScripts() {
     var checkIfUspIsReady = function() {
         uspTries++;
         if (window.__uspapi === uspStubFunction && uspTries < uspTriesLimit) {
-            console.warn('USP is not accessible');
+            if (CMP_DEBUG && uspTries === 1) {
+                console.warn('USP is not accessible');
+            }
         } else {
             clearInterval(uspInterval);
         }
@@ -357,15 +361,7 @@ export function ThirdPartyScripts() {
                 </Script>
             ) : null}
 
-            {/* AdSense script import (official snippet) */}
-            {adsenseClient ? (
-                <Script
-                    id="adsbygoogle-js"
-                    strategy="afterInteractive"
-                    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-                    crossOrigin="anonymous"
-                />
-            ) : null}
+            {/* AdSense script is injected manually by RSOCAd to avoid Next Script attributes */}
 
             {/* Note: page-level auto ads are disabled to avoid duplicate pushes */}
         </>
