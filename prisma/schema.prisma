@@ -36,3 +36,13 @@ model Content {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model SerpIdeas {
+  id        Int      @id @default(autoincrement())
+  q         String
+  locale    String
+  items     String   // JSON string of ideas array
+  cacheKey  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

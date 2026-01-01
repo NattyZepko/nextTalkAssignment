@@ -9,6 +9,7 @@
 import { fetchWithTimeoutAndRetry } from '@/lib/retry';
 import { ideasCache } from '@/lib/cache';
 import { metrics } from '@/lib/metrics';
+import { prisma } from '@/lib/db';
 
 export type IdeaItem = {
     title: string;
@@ -39,6 +40,20 @@ export async function generateSerpIdeas(q: string, locale: string): Promise<Idea
         metrics.inc('ideas.cache.hits');
         metrics.timing('ideas.generate.ms', Date.now() - t0);
         return cached;
+    }
+    // Try DB for deterministic suggestions on cache miss
+    try {
+        const row = await prisma.serpIdeas.findUnique({ where: { cacheKey: key } });
+        if (row) {
+            const parsed: IdeaItem[] = JSON.parse(row.items || '[]');
+            if (Array.isArray(parsed) && parsed.length) {
+                ideasCache.set(key, parsed);
+                metrics.timing('ideas.generate.ms', Date.now() - t0);
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.error('[ideas] DB read failed; falling back to generation', e);
     }
     const googleKey = process.env.GOOGLE_API_KEY;
     const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
@@ -74,6 +89,15 @@ export async function generateSerpIdeas(q: string, locale: string): Promise<Idea
             if (Array.isArray(arr) && arr.length) {
                 const ideas = arr.slice(0, 6).map((it) => ({ title: it.title, q: it.query, desc: it.description }));
                 ideasCache.set(key, ideas);
+                try {
+                    await prisma.serpIdeas.upsert({
+                        where: { cacheKey: key },
+                        update: { q, locale, items: JSON.stringify(ideas) },
+                        create: { q, locale, items: JSON.stringify(ideas), cacheKey: key },
+                    });
+                } catch (e) {
+                    console.error('[ideas] DB write failed (Gemini path)', e);
+                }
                 metrics.timing('ideas.generate.ms', Date.now() - t0);
                 return ideas;
             }
@@ -101,6 +125,15 @@ export async function generateSerpIdeas(q: string, locale: string): Promise<Idea
             if (Array.isArray(arr) && arr.length) {
                 const ideas = arr.slice(0, 6).map((it) => ({ title: it.title, q: it.query, desc: it.description }));
                 ideasCache.set(key, ideas);
+                try {
+                    await prisma.serpIdeas.upsert({
+                        where: { cacheKey: key },
+                        update: { q, locale, items: JSON.stringify(ideas) },
+                        create: { q, locale, items: JSON.stringify(ideas), cacheKey: key },
+                    });
+                } catch (e) {
+                    console.error('[ideas] DB write failed (OpenAI path)', e);
+                }
                 metrics.timing('ideas.generate.ms', Date.now() - t0);
                 return ideas;
             }
@@ -108,5 +141,14 @@ export async function generateSerpIdeas(q: string, locale: string): Promise<Idea
     } catch { }
     metrics.timing('ideas.generate.ms', Date.now() - t0);
     ideasCache.set(key, defaultIdeas);
+    try {
+        await prisma.serpIdeas.upsert({
+            where: { cacheKey: key },
+            update: { q, locale, items: JSON.stringify(defaultIdeas) },
+            create: { q, locale, items: JSON.stringify(defaultIdeas), cacheKey: key },
+        });
+    } catch (e) {
+        console.error('[ideas] DB write failed (default path)', e);
+    }
     return defaultIdeas;
 }

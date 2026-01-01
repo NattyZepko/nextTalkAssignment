@@ -70,10 +70,19 @@ Switch to Postgres/MySQL by updating `provider` in `schema.prisma` and `DATABASE
 
 ## Content Generation
 
-- Articles are generated server-side via Gemini/OpenAI and cached in an LRU to reduce API costs.
+- Articles are generated server-side via Gemini/OpenAI and cached in an LRU to reduce API costs. Content now follows a tiered load strategy: cache → DB → generate.
 - HTML starts with `<article>` and includes headings (H1–H3), readable sections, and related search terms.
 - SEO metadata (title/description) is derived from the article content (H1 + first paragraph) and applied via Next.js metadata.
 - Caching TTL is controlled by `ARTICLE_CACHE_TTL_SECONDS`.
+- Storage & fallback:
+	- On request, the app first tries the in-memory cache for `locale:q`.
+	- On cache miss, it looks up `Content` by `cacheKey` in the DB and primes the cache if found.
+	- Only when both are missing does it generate; the result is then saved to `Content` and cached.
+- Metadata hydration:
+	- `generateMetadata()` calls `peekArticleCache()` which hydrates the cache from DB asynchronously on miss, reducing placeholder meta on subsequent renders.
+- Admin listing:
+	- GET `/api/content?limit=25` returns recent `Content` rows (id/q/locale/metaTitle/metaDescription/timestamps) for inspection.
+	- Files: [src/lib/ai.ts](src/lib/ai.ts), [src/app/api/content/route.ts](src/app/api/content/route.ts), [prisma/schema.prisma](prisma/schema.prisma)
 
 ## Facebook Conversion API
 
@@ -100,6 +109,23 @@ Switch to Postgres/MySQL by updating `provider` in `schema.prisma` and `DATABASE
 - POST `/api/fb/lead` — proxy Facebook CAPI lead
 - GET `/api/generate?q=...&locale=...` — AI-generated content (cached)
 - GET `/api/ideas?q=...&locale=...` — AI ideas (cached TTL)
+- GET `/api/content?limit=25` — recent articles listing (admin inspection)
+
+## SERP Suggestions Persistence
+
+- Deterministic suggestions per query/locale are stored in `SerpIdeas`.
+- Flow: cache → DB → generate (Gemini/OpenAI or defaults), then upsert into DB and set cache.
+- Schema: see `SerpIdeas` in [prisma/schema.prisma](prisma/schema.prisma); migration in [prisma/migrations](prisma/migrations).
+- Verification:
+	- First visit to `/search?q=Pokemon&locale=en_US` seeds DB.
+	- After restart (cache cleared), the same query returns the same suggestions from DB.
+	- Inspect with `npm run prisma:studio` and check the `SerpIdeas` table.
+
+## Vercel Build Note (Prisma)
+
+- Vercel can cache dependencies and skip Prisma client generation.
+- Fixed by adding `prebuild: prisma generate` so builds always generate Prisma Client before `next build`.
+- See [package.json](package.json) scripts; optionally add `postinstall: prisma generate` for extra safety.
 
 ## Ads (RSOC)
 
