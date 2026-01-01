@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import { buildQuery } from '@/lib/url';
 import { prisma } from '@/lib/db';
 import { RSOCAd } from '@/components/RSOCAd';
+import { RelatedSearchOnContent } from '@/components/RelatedSearchOnContent';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,10 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
             {/* Optional second unit after content */}
             <div className="my-6">
                 <RSOCAd query={q} locale={locale} />
+            </div>
+            {/* Related Search on Content (AFS) */}
+            <div className="my-6">
+                <RelatedSearchOnContent query={q} locale={locale} />
             </div>
         </div>
     );
