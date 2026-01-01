@@ -60,7 +60,16 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
             });
         };
 
-        const run = async () => {
+        let cancelled = false;
+        const run = async (tries: number = 0) => {
+            if (cancelled) return;
+            // Ensure container exists before requesting CSA
+            const el = document.getElementById(containerId);
+            if (!el) {
+                if (tries < 20) setTimeout(() => run(tries + 1), 250);
+                return;
+            }
+
             const cmpReady = await waitForCmp();
             // Ensure stub exists
             try {
@@ -111,16 +120,22 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
             };
             try {
                 // Only push when CMP is ready; otherwise skip to avoid CSA timeout
-                if (cmpReady) {
-                    // @ts-ignore
-                    window._googCsa && window._googCsa('relatedsearch', pageOptions, rsblock);
-                } else {
+                const pushedKey = `__afs_relatedsearch_pushed_${containerId}`;
+                if (!cmpReady) {
                     console.warn('CMP not ready -> CSA relatedsearch not requested');
+                    return;
                 }
+                // Avoid duplicate pushes across navigations
+                if ((window as any)[pushedKey]) return;
+                // @ts-ignore
+                window._googCsa && window._googCsa('relatedsearch', pageOptions, rsblock);
+                (window as any)[pushedKey] = true;
             } catch { }
         };
-
         run();
+        return () => {
+            cancelled = true;
+        };
     }, [pubId, styleId, hl, baseUrlProp, containerId, query]);
 
     if (!pubId || !styleId) return null;
