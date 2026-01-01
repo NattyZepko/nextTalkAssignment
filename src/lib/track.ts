@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/db';
 import { TrackEventInput } from '@/lib/validation';
-// import { metrics } from '@/lib/metrics';
 import { metrics } from './metrics';
 
 /**

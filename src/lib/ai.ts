@@ -11,6 +11,7 @@ import { metrics } from '@/lib/metrics';
 import { fetchWithTimeoutAndRetry } from '@/lib/retry';
 import { setGeminiStatus, getGeminiBackoffUntil, setGeminiBackoffUntil } from '@/lib/geminiStatus';
 import crypto from 'node:crypto';
+import { prisma } from '@/lib/db';
 
 export type Generated = {
     html: string;
@@ -161,6 +162,26 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
             }
             return cached;
         }
+    }
+
+    // Cache miss: try DB, and prime cache if found
+    try {
+        const row = await prisma.content.findUnique({ where: { cacheKey: key } });
+        if (row) {
+            const meta = {
+                title: row.metaTitle && row.metaTitle.length > 0 ? row.metaTitle : deriveMetaFromHtml(row.html, q, locale).title,
+                description:
+                    row.metaDescription && row.metaDescription.length > 0
+                        ? row.metaDescription
+                        : deriveMetaFromHtml(row.html, q, locale).description,
+            };
+            const fromDb: Generated = { html: row.html, metaTitle: meta.title, metaDescription: meta.description };
+            contentCache.set(key, fromDb);
+            metrics.timing('ai.generate.ms', Date.now() - t0);
+            return fromDb;
+        }
+    } catch (e) {
+        console.error('[AI] DB read failed; proceeding to generation', e);
     }
 
     const openaiKey = process.env.OPENAI_API_KEY;
@@ -440,7 +461,30 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
         result.metaTitle = result.metaTitle || meta.title;
         result.metaDescription = result.metaDescription || meta.description;
     }
+    // Persist to cache and DB to satisfy tiered loading
     contentCache.set(key, result);
+    try {
+        await prisma.content.upsert({
+            where: { cacheKey: key },
+            update: {
+                q,
+                locale,
+                html: result.html,
+                metaTitle: result.metaTitle,
+                metaDescription: result.metaDescription,
+            },
+            create: {
+                q,
+                locale,
+                html: result.html,
+                metaTitle: result.metaTitle,
+                metaDescription: result.metaDescription,
+                cacheKey: key,
+            },
+        });
+    } catch (e) {
+        console.error('[AI] DB write failed; cache populated but content not persisted', e);
+    }
     metrics.timing('ai.generate.ms', Date.now() - t0);
     return result;
 }
@@ -451,5 +495,29 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
 export function peekArticleCache(q: string, locale: string): Generated | undefined {
     const key = cacheKey(q, locale);
     const cached = contentCache.get(key);
-    return cached;
+    if (cached) return cached;
+    // Try to hydrate from DB without triggering generation
+    try {
+        const row = (prisma as any)?.content ? (prisma as any).content.findUnique({ where: { cacheKey: key } }) : null;
+        // If prisma not initialized yet or not available, bail gracefully
+        if (!row || typeof (row as any)?.then !== 'function') return undefined;
+        // Note: this function is sync by signature, so we cannot await.
+        // Provide a best-effort: kick off hydration asynchronously and return undefined for now.
+        // Callers like generateMetadata() can still fall back to defaults if hydration isn't immediate.
+        (row as Promise<any>)
+            .then((r) => {
+                if (!r) return;
+                const meta = {
+                    title: r.metaTitle && r.metaTitle.length > 0 ? r.metaTitle : deriveMetaFromHtml(r.html, q, locale).title,
+                    description:
+                        r.metaDescription && r.metaDescription.length > 0
+                            ? r.metaDescription
+                            : deriveMetaFromHtml(r.html, q, locale).description,
+                };
+                const hydrated: Generated = { html: r.html, metaTitle: meta.title, metaDescription: meta.description };
+                contentCache.set(key, hydrated);
+            })
+            .catch(() => { /* silent */ });
+    } catch { }
+    return undefined;
 }
