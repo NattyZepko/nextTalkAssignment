@@ -2,11 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Basic layout styles */
+/* Theme variables */
 :root {
-    --bg: #f9fafb;
+    --container__background: #01074b;
 }
 
 body {
-    background: var(--bg);
+    background-color: var(--container__background);
+    color: #ffffff;
 }

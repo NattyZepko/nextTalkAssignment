@@ -19,7 +19,7 @@ export type Generated = {
     metaDescription?: string;
 };
 
-function cacheKey(q: string, locale: string) {
+export function articleCacheKey(q: string, locale: string) {
     return crypto.createHash('sha256').update(`${locale}|${q}`).digest('hex');
 }
 
@@ -144,7 +144,7 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
     console.log('[AI] generateArticleHtml start', { q, locale });
     const t0 = Date.now();
     metrics.inc('ai.generate.invocations');
-    const key = cacheKey(q, locale);
+    const key = articleCacheKey(q, locale);
     const cached = contentCache.get(key);
     if (cached) {
         // Validate cached content relevance; evict if off-topic
@@ -493,7 +493,7 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
  * Peek at cached generated article without triggering a new generation.
  */
 export function peekArticleCache(q: string, locale: string): Generated | undefined {
-    const key = cacheKey(q, locale);
+    const key = articleCacheKey(q, locale);
     const cached = contentCache.get(key);
     if (cached) return cached;
     // Try to hydrate from DB without triggering generation

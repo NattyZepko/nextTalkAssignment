@@ -1,10 +1,11 @@
 import { searchParamsSchema, DEFAULTS } from '@/lib/validation';
-import { generateArticleHtml, peekArticleCache } from '@/lib/ai';
+import { generateArticleHtml, peekArticleCache, articleCacheKey } from '@/lib/ai';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 import { buildQuery } from '@/lib/url';
+import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,17 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
         searchParams: sp,
     });
     const content = await generateArticleHtml(q, locale);
+    // Determine published date: from DB if available, else fallback constant
+    let publishedText = 'Published on Jan 1, 2026'; // Default
+    try {
+        const key = articleCacheKey(q, locale);
+        const row = await prisma.content.findUnique({ where: { cacheKey: key }, select: { createdAt: true } });
+        if (row?.createdAt) {
+            const dt = new Date(row.createdAt);
+            const formatted = dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            publishedText = `Published on ${formatted}`;
+        }
+    } catch { }
     return (
         <div className="space-y-4">
             <div>
@@ -73,6 +85,7 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
             </div>
             <h1 className="text-2xl font-semibold">{q}</h1>
             <p className="text-sm text-gray-600">Locale: {locale}</p>
+            <div className="text-[12px] font-normal opacity-90">{publishedText}</div>
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.html }} />
         </div>
     );

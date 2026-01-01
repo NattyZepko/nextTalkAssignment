@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const enableDebug = process.env.NEXT_PUBLIC_DEBUG_WIDGET === 'true';
     return (
         <html lang="en">
-            <body className="min-h-screen bg-orange-50 text-gray-900">
+            <body className="min-h-screen text-white">
                 {enableThirdParty ? <ThirdPartyScripts /> : null}
                 <ConsentBanner />
                 <main className="max-w-4xl mx-auto p-4">{children}</main>
