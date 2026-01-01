@@ -41,7 +41,7 @@ export async function generateSerpIdeas(q: string, locale: string): Promise<Idea
         metrics.timing('ideas.generate.ms', Date.now() - t0);
         return cached;
     }
-    // Try DB for deterministic suggestions on cache miss
+    // Try DB for deterministic suggestions on cache misses
     try {
         const row = await prisma.serpIdeas.findUnique({ where: { cacheKey: key } });
         if (row) {
