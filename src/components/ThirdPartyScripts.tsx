@@ -367,15 +367,26 @@ export function ThirdPartyScripts() {
                 />
             ) : null}
 
-            {/* Optional page-level config push (test mode) */}
+            {/* Optional page-level config push (test mode) — ensure only once */}
             {adsenseClient && adsenseAdTest ? (
                 <Script id="adsbygoogle-config" strategy="afterInteractive">
                     {`
-                        (adsbygoogle = window.adsbygoogle || []).push({
-                            google_ad_client: '${adsenseClient}',
-                            enable_page_level_ads: true,
-                            google_adtest: 'on'
-                        });
+                        (function(){
+                            try {
+                                // Avoid pushing page-level config multiple times across SPA navigations
+                                if (!('__adsensePageLevelPushed' in window) || !window.__adsensePageLevelPushed) {
+                                    (adsbygoogle = window.adsbygoogle || []).push({
+                                        google_ad_client: '${adsenseClient}',
+                                        enable_page_level_ads: true,
+                                        google_adtest: 'on'
+                                    });
+                                    // @ts-ignore
+                                    window.__adsensePageLevelPushed = true;
+                                }
+                            } catch (e) {
+                                // swallow errors to avoid breaking the page
+                            }
+                        })();
                     `}
                 </Script>
             ) : null}
