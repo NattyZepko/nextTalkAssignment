@@ -5,7 +5,6 @@ export function ThirdPartyScripts() {
     const fbPixelId = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
     const inmobiChoiceId = process.env.NEXT_PUBLIC_INMOBI_CHOICE_ID;
     const cmpDomain = process.env.NEXT_PUBLIC_CMP_HOST_OVERRIDE;
-    const adsenseClientCaPub = process.env.NEXT_PUBLIC_ADSENSE_CA_PUB;
     const adsenseAdTest = process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true';
     const cmpDebug = (process.env.NEXT_PUBLIC_CMP_DEBUG === 'true') || (process.env.NEXT_PUBLIC_DEBUG_WIDGET === 'true');
     const fakeCmp = (process.env.NEXT_PUBLIC_FAKE_CMP === 'true') || (process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true');
@@ -38,16 +37,6 @@ export function ThirdPartyScripts() {
                     id="inmobi-choice"
                     src={`https://cmp.inmobi.com/choice/${inmobiChoiceId}/${cmpDomain}/choice.js?tag_version=V3`}
                     strategy="beforeInteractive"
-                />
-            ) : null}
-
-            {/* Display AdSense global loader (load once, globally) */}
-            {adsenseClientCaPub ? (
-                <Script
-                    id="adsbygoogle-global"
-                    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientCaPub}`}
-                    crossOrigin="anonymous"
-                    strategy="afterInteractive"
                 />
             ) : null}
 

@@ -13,8 +13,18 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     const enableThirdParty = process.env.NEXT_PUBLIC_ENABLE_THIRD_PARTY === 'true';
     const enableDebug = process.env.NEXT_PUBLIC_DEBUG_WIDGET === 'true';
+    const caPub = process.env.NEXT_PUBLIC_ADSENSE_CA_PUB;
     return (
         <html lang="en">
+            <head>
+                {caPub ? (
+                    <script
+                        async
+                        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${caPub}`}
+                        crossOrigin="anonymous"
+                    />
+                ) : null}
+            </head>
             <body className="min-h-screen text-white">
                 {enableThirdParty ? <ThirdPartyScripts /> : null}
                 <ConsentBanner />
