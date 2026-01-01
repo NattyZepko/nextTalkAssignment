@@ -17,7 +17,7 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
     const pubId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
     const styleId = process.env.NEXT_PUBLIC_ADSENSE_ASID || process.env.NEXT_PUBLIC_ADSENSE_STYLE_ID;
     const siteUrl = process.env.SITE_URL || '';
-    const baseUrl = (resultsBaseUrl || (siteUrl ? siteUrl.replace(/\/$/, '') + '/search' : '/search'));
+    const baseUrlProp = resultsBaseUrl || '';
     const hl = (locale && locale.length >= 2 ? locale.slice(0, 2) : 'en');
 
     const containerId = useMemo(() => 'afscontainer1', []);
@@ -83,12 +83,26 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
             }
 
             // Prepare options and push relatedsearch unit
+            // Resolve absolute resultsPageBaseUrl (required by CSA)
+            let resultsBaseAbsolute = '';
+            try {
+                const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : (siteUrl || '');
+                // Prefer explicit prop if it is already absolute
+                if (baseUrlProp && /^https?:\/\//.test(baseUrlProp)) {
+                    resultsBaseAbsolute = baseUrlProp;
+                } else if (origin) {
+                    resultsBaseAbsolute = origin.replace(/\/$/, '') + '/search?q={searchTerms}';
+                } else if (siteUrl) {
+                    resultsBaseAbsolute = siteUrl.replace(/\/$/, '') + '/search?q={searchTerms}';
+                }
+            } catch { }
+
             const pageOptions: any = {
                 pubId,
                 relatedSearchTargeting: 'content',
                 hl,
                 styleId,
-                resultsPageBaseUrl: baseUrl,
+                resultsPageBaseUrl: resultsBaseAbsolute || (siteUrl ? siteUrl.replace(/\/$/, '') + '/search?q={searchTerms}' : ''),
                 resultsPageQueryParam: 'q',
             };
             const rsblock: any = {
@@ -107,7 +121,7 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
         };
 
         run();
-    }, [pubId, styleId, hl, baseUrl, containerId, query]);
+    }, [pubId, styleId, hl, baseUrlProp, containerId, query]);
 
     if (!pubId || !styleId) return null;
     return <div id={containerId} />;
