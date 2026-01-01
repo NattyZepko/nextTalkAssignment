@@ -58,7 +58,7 @@ export function SearchView({ initialQ, initialLocale, mon, rac }: Props) {
                     id="q"
                     value={inputQ}
                     onChange={(e) => setInputQ(e.target.value)}
-                    className="flex-1 border rounded px-2 py-1 text-sm"
+                    className="flex-1 border border-gray-400 rounded px-2 py-1 text-sm bg-white text-gray-900 placeholder:text-gray-500"
                     placeholder="Type a keyword"
                 />
                 <button
