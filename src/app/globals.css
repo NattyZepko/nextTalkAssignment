@@ -11,3 +11,54 @@ body {
     background-color: var(--container__background);
     color: #ffffff;
 }
+
+/* Article typography for dark theme */
+.prose {
+    color: #ffffff;
+    line-height: 1.7;
+}
+
+.prose h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.prose h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.prose p {
+    margin: 0.5rem 0 1rem;
+}
+
+.prose section {
+    margin: 1rem 0;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.prose a {
+    color: #93c5fd;
+}
+
+.prose ul,
+.prose ol {
+    margin: 0.5rem 0 1rem;
+    padding-left: 1.25rem;
+}
+
+.prose li {
+    margin: 0.25rem 0;
+}

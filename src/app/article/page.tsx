@@ -84,7 +84,7 @@ export default async function ArticlePage({ searchParams }: { searchParams: Reco
                 </Link>
             </div>
             <h1 className="text-2xl font-semibold">{q}</h1>
-            <p className="text-sm text-gray-600">Locale: {locale}</p>
+            <p className="text-sm text-gray-300">Locale: {locale}</p>
             <div className="text-[12px] font-normal opacity-90">{publishedText}</div>
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.html }} />
         </div>

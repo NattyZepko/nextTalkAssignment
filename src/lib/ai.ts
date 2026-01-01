@@ -69,7 +69,7 @@ async function strictRegenerate(q: string, locale: string): Promise<Generated | 
         const openaiKey = process.env.OPENAI_API_KEY;
         const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
-        const strictPrompt = `You MUST generate an article ONLY about "${q}" in locale "${locale}". Respond strictly with valid HTML starting with <article>. Do not include any explanations, prefaces, or code fences. Include headings (h1-h3) and natural related search terms for "${q}".`;
+        const strictPrompt = `You MUST generate an article ONLY about "${q}" in locale "${locale}". Respond strictly with valid HTML starting with <article>. Do not include any explanations, prefaces, or code fences. Structure the body with multiple <section> blocks, include headings (h1-h3), paragraphs, and clear breaks between segments. Naturally include related search terms for "${q}".`;
 
         const sanitize = (s: string) => {
             let t = (s || '').trim();
@@ -206,7 +206,7 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
             setGeminiStatus({ ok: false, statusCode: 429, message: `Gemini backoff active (${remaining}s)`, retrySeconds: remaining });
             if (openaiKey) {
                 try {
-                    const prompt = `Write an SEO-optimized article (1000 words) in ${locale} about "${q}". Include headings, meta title and meta description. Avoid harmful or copyrighted content. Natural related search terms.`;
+                    const prompt = `Write an SEO-optimized article (1000 words) in ${locale} about "${q}". Start with <article> and structure the body with multiple <section> blocks, with headings (h1-h3), paragraphs, and clear breaks between segments. Include meta title and meta description. Avoid harmful or copyrighted content. Naturally include related search terms.`;
                     const resp = await fetchWithTimeoutAndRetry('https://api.openai.com/v1/chat/completions', {
                         method: 'POST',
                         headers: {
@@ -243,7 +243,7 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
             contentCache.set(key, result);
             return result;
         }
-        const prompt = `You are a content generator. Respond ONLY with valid HTML for an article about "${q}" in locale "${locale}". Do not include explanations, prefaces, or code fences. Output must start with <article> and contain headings (h1-h3), and include natural related search terms. Avoid harmful or copyrighted content.`;
+        const prompt = `You are a content generator. Respond ONLY with valid HTML for an article about "${q}" in locale "${locale}". Do not include explanations, prefaces, or code fences. Output must start with <article> and contain multiple <section> blocks with headings (h1-h3), paragraphs, and clear breaks between segments. Naturally include related search terms. Avoid harmful or copyrighted content.`;
 
         const parseRetrySeconds = (body: any): number | undefined => {
             try {
@@ -390,7 +390,7 @@ export async function generateArticleHtml(q: string, locale: string): Promise<Ge
         }
     } else {
         try {
-            const prompt = `You are a content generator. Respond ONLY with valid HTML for an article about "${q}" in locale "${locale}". Do not include explanations, prefaces, or code fences. Output must start with <article> and contain headings (h1-h3), and include natural related search terms. Avoid harmful or copyrighted content.`;
+            const prompt = `You are a content generator. Respond ONLY with valid HTML for an article about "${q}" in locale "${locale}". Do not include explanations, prefaces, or code fences. Output must start with <article> and contain multiple <section> blocks with headings (h1-h3), paragraphs, and clear breaks between segments. Naturally include related search terms. Avoid harmful or copyrighted content.`;
             const resp = await fetchWithTimeoutAndRetry('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {

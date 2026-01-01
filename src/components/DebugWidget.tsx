@@ -209,19 +209,19 @@ export function DebugWidget() {
 
     return (
         <div className="fixed bottom-16 right-4 z-50">
-            <div className="rounded-lg shadow-lg border bg-white/90 backdrop-blur p-3 w-80">
+            <div className="rounded-lg shadow-lg border border-gray-700 bg-gray-900/90 backdrop-blur p-3 w-80 text-white">
                 <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">Debug Widget</span>
                     <div className="space-x-2">
                         <button
-                            className="text-sm px-2 py-1 border rounded hover:bg-gray-100"
+                            className="text-sm px-2 py-1 border rounded hover:bg-gray-800"
                             onClick={() => setCollapsed((c) => !c)}
                             aria-label={collapsed ? 'Expand debug' : 'Collapse debug'}
                         >
                             {collapsed ? 'Expand' : 'Minimize'}
                         </button>
                         <button
-                            className="text-sm px-2 py-1 border rounded hover:bg-gray-100"
+                            className="text-sm px-2 py-1 border rounded hover:bg-gray-800"
                             onClick={openConsent}
                         >
                             Manage preferences
@@ -232,13 +232,13 @@ export function DebugWidget() {
                     <div className="text-xs grid grid-cols-2 gap-x-3 gap-y-1">
                         {items.map((it) => (
                             <div key={it.k} className="flex">
-                                <span className="text-gray-500 w-24">{it.k}</span>
-                                <span className="font-mono break-all">{it.v}</span>
+                                <span className="text-gray-400 w-24">{it.k}</span>
+                                <span className="font-mono break-all text-gray-100">{it.v}</span>
                             </div>
                         ))}
                     </div>
                 )}
-                <div className="mt-2 text-[11px] text-gray-600">
+                <div className="mt-2 text-[11px] text-gray-300">
                     <div className="mb-1 text-xs">
                         <span className="font-semibold">Consent:</span> {consentOpenVia || 'N/A'}{consentError ? ` — ${consentError}` : ''}
                     </div>
