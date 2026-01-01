@@ -96,9 +96,13 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
                 relatedSearches: 6,
             };
             try {
-                // only push after CMP ready or timeout
-                // @ts-ignore
-                window._googCsa && window._googCsa('relatedsearch', pageOptions, rsblock);
+                // Only push when CMP is ready; otherwise skip to avoid CSA timeout
+                if (cmpReady) {
+                    // @ts-ignore
+                    window._googCsa && window._googCsa('relatedsearch', pageOptions, rsblock);
+                } else {
+                    console.warn('CMP not ready -> CSA relatedsearch not requested');
+                }
             } catch { }
         };
 
