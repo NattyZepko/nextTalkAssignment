@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 type RSOCAdProps = {
     query: string;
@@ -10,38 +11,34 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
     const client = process.env.NEXT_PUBLIC_ADSENSE_CA_PUB;
     const asid = process.env.NEXT_PUBLIC_ADSENSE_ASID;
     const slot = process.env.NEXT_PUBLIC_ADSENSE_SLOT;
-    const adtest = process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true' || process.env.NODE_ENV !== 'production';
+    const adtest = process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true';
     const pageUrlOverride = process.env.NEXT_PUBLIC_ADSENSE_PAGE_URL;
-    const elRef = useRef<HTMLModElement | null>(null);
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     // Force a fresh ad element whenever targeting changes
-    const unitKey = useMemo(() => {
+    // One key that captures both routing + targeting changes
+    const searchStr = searchParams?.toString() ?? '';
+    const insKey = useMemo(() => {
+        const route = `${pathname}?${searchStr}`;
         const id = asid ? `asid:${asid}` : slot ? `slot:${slot}` : 'none';
-        return `${id}-${query}-${locale ?? ''}`;
-    }, [asid, slot, query, locale]);
+        return `${route}|${id}|q:${query}|l:${locale ?? ''}`;
+    }, [pathname, searchStr, asid, slot, query, locale]);
+    const lastPushedKeyRef = useRef<string>('');
 
+    // Push exactly once per rendered <ins> key
     useEffect(() => {
-        // Load AdSense script once
-        const scriptId = 'adsbygoogle-js';
-        if (!document.getElementById(scriptId)) {
-            const s = document.createElement('script');
-            s.id = scriptId;
-            s.async = true;
-            s.src = client
-                ? `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(client)}`
-                : 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-            (s as any).crossOrigin = 'anonymous';
-            document.head.appendChild(s);
-        }
-        // Push ad only if the current <ins> hasn't been initialized yet
+        if (!client || (!asid && !slot)) return;
+        if (typeof window === 'undefined') return;
+        if (lastPushedKeyRef.current === insKey) return;
+        lastPushedKeyRef.current = insKey;
         try {
-            const initialized = elRef.current?.getAttribute('data-adsbygoogle-status');
-            if (!initialized) {
-                // @ts-ignore
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            }
-        } catch { }
-    }, [unitKey, client]);
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.warn('adsbygoogle push failed', e);
+        }
+    }, [client, asid, slot, insKey]);
 
     if (!client || (!asid && !slot)) {
         return (
@@ -55,8 +52,7 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
     if (asid) {
         return (
             <ins
-                key={unitKey}
-                ref={elRef}
+                key={insKey}
                 className="adsbygoogle"
                 style={{ display: 'block' }}
                 data-ad-client={client}
@@ -65,13 +61,12 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
                 data-full-width-responsive="true"
                 {...(pageUrlOverride ? { 'data-page-url': pageUrlOverride } : {})}
                 {...(adtest ? { 'data-adtest': 'on' } : {})}
-            ></ins>
+            />
         );
     }
     return (
         <ins
-            key={unitKey}
-            ref={elRef}
+            key={insKey}
             className="adsbygoogle"
             style={{ display: 'block' }}
             data-ad-client={client}
@@ -80,6 +75,6 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
             data-full-width-responsive="true"
             {...(pageUrlOverride ? { 'data-page-url': pageUrlOverride } : {})}
             {...(adtest ? { 'data-adtest': 'on' } : {})}
-        ></ins>
+        />
     );
 }
