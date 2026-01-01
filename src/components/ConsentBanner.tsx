@@ -7,6 +7,12 @@ export function ConsentBanner() {
     useEffect(() => {
         const consent = localStorage.getItem('consent');
         if (!consent) setVisible(true);
+        // Listen for external requests to open the banner (from DebugWidget)
+        const handler = () => setVisible(true);
+        window.addEventListener('open-consent-banner', handler);
+        return () => {
+            window.removeEventListener('open-consent-banner', handler);
+        };
     }, []);
 
     if (!visible) return null;

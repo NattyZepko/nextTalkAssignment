@@ -40,6 +40,7 @@ export function DebugWidget() {
     const [geminiBackoffUntilTs, setGeminiBackoffUntilTs] = useState<number | null>(null);
     const [consentOpenVia, setConsentOpenVia] = useState<string | null>(null);
     const [consentError, setConsentError] = useState<string | null>(null);
+    const [consentState, setConsentState] = useState<string>('N/A');
 
     const sp = useSearchParams();
     const q = sp.get('q') || '';
@@ -58,6 +59,14 @@ export function DebugWidget() {
             window.__tcfapi('getTCData', 2, (data, ok) => {
                 if (ok) setTcfData(data as TcfData);
             });
+            // Subscribe to consent changes
+            try {
+                window.__tcfapi('addEventListener', 2, (data: any, ok: boolean) => {
+                    if (ok && data) {
+                        setTcfData(data as TcfData);
+                    }
+                });
+            } catch { }
         }
         // USP ping (CCPA/US Privacy)
         if (typeof window.__uspapi === 'function') {
@@ -87,6 +96,12 @@ export function DebugWidget() {
                 setGeminiBackoffUntilTs(j?.backoffUntilTs ?? null);
             })
             .catch(() => { });
+        // Local consent (banner)
+        try {
+            const c = localStorage.getItem('consent');
+            if (c === 'accepted') setConsentState('Accepted');
+            else if (c === 'declined') setConsentState('Declined');
+        } catch { }
     }, []);
 
     const cmpReady = !!tcfPing?.cmpLoaded;
@@ -96,6 +111,11 @@ export function DebugWidget() {
         setConsentOpenVia(null);
         setConsentError(null);
         let attempted = false;
+        // Always provide a local fallback banner so users see immediate UI
+        try {
+            window.dispatchEvent(new Event('open-consent-banner'));
+            setConsentOpenVia('Banner');
+        } catch { }
         // Try TCF via common commands
         try {
             if (typeof window.__tcfapi === 'function') {
@@ -169,13 +189,15 @@ export function DebugWidget() {
                         clearInterval(iv);
                         const msg = 'CMP script failed to initialize';
                         setConsentError(msg);
-                        alert('Consent UI not available: ' + msg);
+                        // Keep local banner open as fallback
+                        try { window.dispatchEvent(new Event('open-consent-banner')); } catch { }
                     }
                 }, 300);
             } else {
                 const msg = 'CMP/USP/GPP APIs not found';
                 setConsentError(msg);
-                alert('Consent UI not available: ' + msg);
+                // Keep local banner open as fallback
+                try { window.dispatchEvent(new Event('open-consent-banner')); } catch { }
             }
         }
     };
@@ -206,6 +228,38 @@ export function DebugWidget() {
             { k: 'Gemini Error', v: geminiStatus?.message ?? '' },
         ], [cmpReady, tcfPing, tcfData, uspReady, uspData, q, locale, mon, rac, thirdParty, pixelReady, adsReady, cookies, geminiStatus, geminiBackoffUntilTs]
     );
+
+    // Derive user-friendly consent state whenever sources change
+    useEffect(() => {
+        // Priority: explicit banner choice
+        try {
+            const c = localStorage.getItem('consent');
+            if (c === 'accepted') {
+                setConsentState('Accepted');
+                return;
+            }
+            if (c === 'declined') {
+                setConsentState('Declined');
+                return;
+            }
+        } catch { }
+        // TCF
+        if (tcfData?.eventStatus) {
+            const hasTc = !!tcfData.tcString;
+            if (tcfData.eventStatus === 'useractioncomplete' || tcfData.eventStatus === 'tcloaded') {
+                setConsentState(hasTc ? 'TCF: Consented' : 'TCF: No consent');
+                return;
+            }
+            setConsentState(`TCF: ${tcfData.eventStatus}`);
+            return;
+        }
+        // USP (CCPA)
+        if (uspData?.uspString) {
+            setConsentState(`USP: ${uspData.uspString}`);
+            return;
+        }
+        setConsentState('N/A');
+    }, [tcfData, uspData]);
 
     return (
         <div className="fixed bottom-16 right-4 z-50">
@@ -240,7 +294,7 @@ export function DebugWidget() {
                 )}
                 <div className="mt-2 text-[11px] text-gray-300">
                     <div className="mb-1 text-xs">
-                        <span className="font-semibold">Consent:</span> {consentOpenVia || 'N/A'}{consentError ? ` — ${consentError}` : ''}
+                        <span className="font-semibold">Consent:</span> {consentState}{consentOpenVia ? ` — via ${consentOpenVia}` : ''}{consentError ? ` — ${consentError}` : ''}
                     </div>
                     We use cookies for analytics and ads. Manage preferences per GDPR/CCPA.
                 </div>
