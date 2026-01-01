@@ -100,9 +100,10 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
                 if (baseUrlProp && /^https?:\/\//.test(baseUrlProp)) {
                     resultsBaseAbsolute = baseUrlProp;
                 } else if (origin) {
-                    resultsBaseAbsolute = origin.replace(/\/$/, '') + '/search?q={searchTerms}';
+                    // For search pages, pass base URL without query; CSA will append via resultsPageQueryParam using provided `query`
+                    resultsBaseAbsolute = origin.replace(/\/$/, '') + '/search';
                 } else if (siteUrl) {
-                    resultsBaseAbsolute = siteUrl.replace(/\/$/, '') + '/search?q={searchTerms}';
+                    resultsBaseAbsolute = siteUrl.replace(/\/$/, '') + '/search';
                 }
             } catch { }
 
@@ -111,8 +112,9 @@ export function RelatedSearchOnContent({ query, locale, resultsBaseUrl }: Relate
                 relatedSearchTargeting: 'content',
                 hl,
                 styleId,
-                resultsPageBaseUrl: resultsBaseAbsolute || (siteUrl ? siteUrl.replace(/\/$/, '') + '/search?q={searchTerms}' : ''),
+                resultsPageBaseUrl: resultsBaseAbsolute || (siteUrl ? siteUrl.replace(/\/$/, '') + '/search' : ''),
                 resultsPageQueryParam: 'q',
+                query, // Explicitly pass the search term so CSA appends `?q=<term>`
             };
             const rsblock: any = {
                 container: containerId,
