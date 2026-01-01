@@ -7,7 +7,7 @@ type RSOCAdProps = {
 };
 
 export function RSOCAd({ query, locale }: RSOCAdProps) {
-    const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+    const client = process.env.NEXT_PUBLIC_ADSENSE_CA_PUB;
     const asid = process.env.NEXT_PUBLIC_ADSENSE_ASID;
     const slot = process.env.NEXT_PUBLIC_ADSENSE_SLOT;
     const adtest = process.env.NEXT_PUBLIC_ADSENSE_ADTEST === 'true' || process.env.NODE_ENV !== 'production';
@@ -28,9 +28,7 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
             s.id = scriptId;
             s.async = true;
             s.src = client
-                ? `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(
-                    client
-                )}`
+                ? `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(client)}`
                 : 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
             (s as any).crossOrigin = 'anonymous';
             document.head.appendChild(s);
@@ -48,7 +46,7 @@ export function RSOCAd({ query, locale }: RSOCAdProps) {
     if (!client || (!asid && !slot)) {
         return (
             <div className="border p-3 rounded bg-yellow-50 text-sm">
-                RSOC placeholder — set NEXT_PUBLIC_ADSENSE_CLIENT and NEXT_PUBLIC_ADSENSE_ASID (or NEXT_PUBLIC_ADSENSE_SLOT).
+                RSOC placeholder — set NEXT_PUBLIC_ADSENSE_CA_PUB and NEXT_PUBLIC_ADSENSE_ASID (or NEXT_PUBLIC_ADSENSE_SLOT).
             </div>
         );
     }

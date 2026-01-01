@@ -15,7 +15,7 @@ type RelatedSearchProps = {
 };
 
 export function RelatedSearchOnContent({ query, locale, resultsBaseUrl, containerId: containerIdProp }: RelatedSearchProps) {
-    const pubId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+    const pubId = process.env.NEXT_PUBLIC_AFS_PUB_ID;
     const styleId = process.env.NEXT_PUBLIC_ADSENSE_ASID || process.env.NEXT_PUBLIC_ADSENSE_STYLE_ID;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const baseUrlProp = resultsBaseUrl || '';

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RSOCAd } from '@/components/RSOCAd';
+import { SearchResultsAds } from '@/components/SearchResultsAds';
 import { TrackedLink } from '@/components/TrackedLink';
 import { buildSerpItems } from '@/lib/serp';
 import type { SerpItem } from '@/lib/serp';
@@ -73,8 +73,8 @@ export function SearchView({ initialQ, initialLocale, mon, rac }: Props) {
             <p className="text-sm text-gray-600">Locale: {initialLocale}</p>
 
             <div className="border rounded p-4">
-                <h2 className="font-medium">Related Search Ads</h2>
-                <RSOCAd query={committedQ} locale={initialLocale} />
+                <h2 className="font-medium">Search Ads</h2>
+                <SearchResultsAds query={committedQ} locale={initialLocale} />
             </div>
 
             <div className="border rounded p-4">
